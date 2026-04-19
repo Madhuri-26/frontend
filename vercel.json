@@ -13,27 +13,23 @@
     },
     {
       "src": "/css/(.*)",
-      "dest": "/frontend/css/$1"
+      "dest": "/public/css/$1"
     },
     {
       "src": "/js/(.*)",
-      "dest": "/frontend/js/$1"
-    },
-    {
-      "src": "/html/(.*)",
-      "dest": "/frontend/html/$1"
+      "dest": "/public/js/$1"
     },
     {
       "src": "/",
-      "dest": "/frontend/html/index.html"
+      "dest": "/public/html/index.html"
     },
     {
       "src": "/login.html",
-      "dest": "/frontend/html/login.html"
+      "dest": "/public/html/login.html"
     },
     {
-      "src": "/index.html",
-      "dest": "/frontend/html/index.html"
+      "src": "/(.*)",
+      "dest": "/public/html/$1"
     }
   ]
 }
