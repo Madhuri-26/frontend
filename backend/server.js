@@ -16,9 +16,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 // Serve static files
-app.use(express.static(path.join(__dirname, '../public/html')));
-app.use('/css', express.static(path.join(__dirname, '../public/css')));
-app.use('/js', express.static(path.join(__dirname, '../public/js')));
+app.use(express.static(path.join(__dirname, '../frontend/html')));
+app.use('/css', express.static(path.join(__dirname, '../frontend/css')));
+app.use('/js', express.static(path.join(__dirname, '../frontend/js')));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
