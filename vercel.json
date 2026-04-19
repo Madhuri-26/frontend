@@ -20,8 +20,20 @@
       "dest": "/frontend/js/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "/html/(.*)",
       "dest": "/frontend/html/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/frontend/html/index.html"
+    },
+    {
+      "src": "/login.html",
+      "dest": "/frontend/html/login.html"
+    },
+    {
+      "src": "/index.html",
+      "dest": "/frontend/html/index.html"
     }
   ]
 }
