@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlagGuard - Professional Plagiarism Detection</title>
+    <meta name="description" content="Verify originality in seconds. Upload a file, paste text, or use a sample to detect plagiarism instantly.">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Mammoth.js for .docx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <!-- Custom Auth -->
+    <script src="../js/auth-custom.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --indigo: #6366f1;
+            --indigo-dark: #4f46e5;
+            --indigo-light: #e0e7ff;
+            --slate-900: #0f172a;
+            --slate-700: #334155;
+            --slate-500: #64748b;
+            --slate-300: #cbd5e1;
+            --slate-100: #f1f5f9;
+            --slate-50: #f8fafc;
+            --white: #ffffff;
+            --green: #22c55e;
+            --red: #ef4444;
+            --amber: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f2f8;
+            min-height: 100vh;
+            color: var(--slate-900);
+        }
+
+        /* ─── AUTH SCREENS ─── */
+        #loginSection {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .auth-left {
+            flex: 1;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            color: white;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .auth-right {
+            flex: 1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+        }
+
+        @media (max-width: 1024px) { .auth-left { display: none; } }
+
+        .input-box {
+            background: #f9fafb;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .input-box:focus {
+            background: white;
+            border-color: var(--indigo);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            outline: none;
+        }
+        .btn-primary {
+            background: var(--indigo-dark);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+        /* ─── DASHBOARD ─── */
+        #dashboardSection {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Nav */
+        .top-nav {
+            background: white;
+            border-bottom: 1px solid #e8ecf4;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--slate-900);
+        }
+        .nav-brand i { color: var(--indigo); font-size: 1.25rem; }
+        .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--slate-500);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--indigo); }
+        #logoutBtn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: color 0.2s;
+        }
+        #logoutBtn:hover { color: #dc2626; }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem 2.5rem;
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--slate-900);
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p {
+            color: var(--slate-500);
+            font-size: 0.9rem;
+            max-width: 520px;
+            line-height: 1.6;
+        }
+
+        /* Split Layout */
+        .checker-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .checker-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Left Panel */
+        .input-panel {
+            background: white;
+            border-radius: 1.25rem;
+            padding: 2rem;
+            box-shadow: 0 2px 16px rgba(15, 23, 42, 0.06);
+            border: 1px solid #e8ecf4;
+        }
+
+        /* Tabs */
+        .mode-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--slate-100);
+            padding: 0.35rem;
+            border-radius: 0.75rem;
+            width: fit-content;
+            margin-bottom: 1.75rem;
+        }
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1.1rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--slate-500);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: white;
+            color: var(--indigo);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .tab-btn:hover:not(.active) { color: var(--slate-700); }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--slate-300);
+            border-radius: 1rem;
+            padding: 3.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: var(--slate-50);
+            transition: all 0.2s;
+            margin-bottom: 1.25rem;
+            text-align: center;
+        }
+        .upload-area:hover {
+            border-color: var(--indigo);
+            background: #f5f5ff;
+        }
+        .upload-icon-wrap {
+            width: 56px;
+            height: 56px;
+            background: var(--indigo-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        .upload-area i.upload-cloud { color: var(--indigo); font-size: 1.4rem; }
+        #fileName { color: var(--slate-500); font-size: 0.85rem; font-weight: 500; }
+
+        /* Sample text box */
+        .sample-box {
+            background: var(--slate-50);
+            border: 1.5px solid #e8ecf4;
+            border-radius: 0.875rem;
+            padding: 1.5rem;
+            min-height: 160px;
+            max-height: 220px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            color: var(--slate-500);
+            line-height: 1.6;
+        }
+
+        /* Paste Textarea */
+        .paste-area {
+            width: 100%;
+            min-height: 180px;
+            padding: 1rem 1.1rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 0.875rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            resize: vertical;
+            color: var(--slate-700);
+            background: var(--slate-50);
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+        }
+        .paste-area:focus {
+            outline: none;
+            border-color: var(--indigo);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.08);
+        }
+        .word-count-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+            color: var(--slate-500);
+        }
+
+        /* Scan Button */
+        .scan-btn {
+            background: linear-gradient(135deg, var(--indigo) 0%, var(--indigo-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.85rem 1.5rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.01em;
+        }
+        .scan-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99,102,241,0.3);
+        }
+        .scan-btn:active { transform: translateY(0); }
+
+        .btn-emerald {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        .btn-emerald:hover { box-shadow: 0 4px 14px rgba(16,185,129,0.3); transform: translateY(-1px); }
+
+        /* Progress Bar */
+        #progressContainer {
+            margin: 1.25rem 0;
+        }
+        .progress-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--slate-500);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.5rem;
+        }
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: var(--slate-100);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--indigo), #a78bfa);
+            border-radius: 9999px;
+            transition: width 0.3s ease;
+        }
+
+        /* Right Panel - Results */
+        .results-panel {
+            background: white;
+            border-radius: 1.25rem;
+            box-shadow: 0 2px 16px rgba(15, 23, 42, 0.06);
+            border: 1px solid #e8ecf4;
+            overflow: hidden;
+            position: sticky;
+            top: 80px;
+        }
+
+        .results-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: #fafbfe;
+        }
+        .results-header i { color: #059669; font-size: 1rem; }
+        .results-header span {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--slate-900);
+        }
+
+        .results-body { padding: 1.5rem; }
+
+        /* Score Ring */
+        .score-ring-section {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .score-ring {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .score-ring::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: white;
+            border-radius: 50%;
+        }
+        .score-ring span {
+            position: relative;
+            z-index: 1;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--slate-900);
+        }
+        .score-info { flex: 1; }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .status-good { background: #dcfce7; color: #16a34a; }
+        .status-warn { background: #fef3c7; color: #d97706; }
+        .status-bad  { background: #fee2e2; color: #dc2626; }
+
+        .score-subtext { font-size: 0.8rem; color: var(--slate-500); line-height: 1.4; }
+        .score-subtext strong { color: var(--slate-700); }
+
+        /* Metric Rows */
+        .metric-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .metric-row:last-of-type { border-bottom: none; }
+        .metric-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--slate-600);
+        }
+        .metric-left i { width: 18px; text-align: center; font-size: 0.95rem; }
+
+        .metric-badge {
+            min-width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0 0.5rem;
+        }
+        .badge-good { background: #dcfce7; color: #16a34a; }
+        .badge-warn { background: #fef3c7; color: #d97706; }
+        .badge-bad  { background: #fee2e2; color: #dc2626; }
+        .badge-neutral { background: var(--slate-100); color: var(--slate-600); }
+
+        /* Mini note */
+        .mini-note {
+            margin-top: 1.25rem;
+            padding: 0.75rem 1rem;
+            background: var(--slate-50);
+            border-radius: 0.625rem;
+            font-size: 0.75rem;
+            color: var(--slate-500);
+            line-height: 1.5;
+            border: 1px solid #e8ecf4;
+        }
+
+        /* Placeholder state */
+        .results-placeholder {
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+        }
+        .placeholder-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--indigo-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+        .placeholder-icon i { color: var(--indigo); font-size: 1.4rem; }
+        .results-placeholder h3 { font-size: 0.95rem; font-weight: 600; color: var(--slate-700); margin-bottom: 0.4rem; }
+        .results-placeholder p { font-size: 0.8rem; color: var(--slate-500); line-height: 1.5; }
+
+        /* Reset */
+        #resetBtn {
+            display: block;
+            margin-top: 1rem;
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--slate-400);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            text-align: center;
+            text-decoration: underline;
+            visibility: hidden; /* Only show when needed */
+        }
+        #resetBtn.visible { visibility: visible; }
+        #resetBtn:hover { color: var(--slate-600); }
+
+        /* Animation */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .result-animated { animation: fadeUp 0.4s ease; }
+
+        .hidden { display: none !important; }
+        .flex-row { display: flex; gap: 0.75rem; }
+        .mode-content { width: 100%; }
+    </style>
+</head>
+<body>
+
+<!-- Login section removed, handled by dedicated login.html -->
+<!-- ═══════════════════════════════════════════
+     PAGE 2: DASHBOARD SECTION
+═══════════════════════════════════════════ -->
+<div id="dashboardSection" class="hidden">
+    <!-- Navigation -->
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <i class="fas fa-shield-alt"></i>
+            <span id="brand-title">PlagGuard</span>
+        </div>
+        <div class="nav-links">
+            <a href="about.html"><i class="fas fa-info-circle" style="margin-right:0.3rem;"></i>About</a>
+            <div id="user-button">
+                <button id="logoutBtn" onclick="logout()"><i class="fas fa-sign-out-alt" style="margin-right:0.3rem;"></i>Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Verify Originality in Seconds.</h1>
+            <p>Upload a file, test the sample content, or paste your own text to generate a clean plagiarism overview.</p>
+        </div>
+
+        <div class="checker-grid">
+
+            <!-- ── LEFT: Input Panel ── -->
+            <div class="input-panel">
+                <!-- Tabs -->
+                <div class="mode-tabs">
+                    <button onclick="switchMode('upload')" id="btn-upload" class="tab-btn active">
+                        <i class="far fa-file-alt"></i> Upload
+                    </button>
+                    <button onclick="switchMode('sample')" id="btn-sample" class="tab-btn">
+                        <i class="far fa-file-code"></i> Sample
+                    </button>
+                    <button onclick="switchMode('paste')" id="btn-paste" class="tab-btn">
+                        <i class="fas fa-pencil-alt"></i> Paste
+                    </button>
+                </div>
+
+                <!-- Upload Mode -->
+                <div id="mode-upload" class="mode-content">
+                    <label for="fileInput" class="upload-area">
+                        <div class="upload-icon-wrap">
+                            <i class="fas fa-cloud-upload-alt upload-cloud"></i>
+                        </div>
+                        <span id="fileName">Select PDF, DOCX or TXT</span>
+                        <span style="font-size:0.75rem;color:#94a3b8;margin-top:0.4rem;">Click to browse or drag & drop</span>
+                        <input type="file" id="fileInput" class="hidden" accept=".txt,.docx,.pdf">
+                    </label>
+                    <button onclick="startFileScan()" class="scan-btn">
+                        <i class="fas fa-search" style="margin-right:0.5rem;"></i>Start File Scan
+                    </button>
+                </div>
+
+                <!-- Sample Mode -->
+                <div id="mode-sample" class="mode-content hidden">
+                    <div class="sample-box">
+                        <div id="sampleTextBox" style="font-style:italic;">Click "Load Sample" to view demo text...</div>
+                    </div>
+                    <div class="flex-row">
+                        <button onclick="loadSampleText()" class="btn-emerald">
+                            <i class="fas fa-file-import" style="margin-right:0.4rem;"></i>Load Sample Text
+                        </button>
+                        <button id="scanSampleBtn" onclick="startSampleScan()" class="scan-btn hidden" style="flex:1;">
+                            <i class="fas fa-search" style="margin-right:0.4rem;"></i>Scan Sample
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Paste Mode -->
+                <div id="mode-paste" class="mode-content hidden">
+                    <textarea id="pasteTextArea" class="paste-area" placeholder="Paste your text here to check for plagiarism..."></textarea>
+                    <div class="word-count-row">
+                        <span><span id="wordCount">0</span> / 2000 words</span>
+                    </div>
+                    <button onclick="startPasteScan()" class="scan-btn">
+                        <i class="fas fa-search" style="margin-right:0.5rem;"></i>Scan Pasted Text
+                    </button>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="progressContainer" class="hidden">
+                    <div class="progress-label-row">
+                        <span id="progressText">Analyzing...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-track"><div id="progressBar"></div></div>
+                </div>
+
+                <button id="resetBtn" onclick="resetApp(true)">Clear and Reset</button>
+            </div>
+
+            <!-- ── RIGHT: Results Panel ── -->
+            <div class="results-panel">
+                <div class="results-header">
+                    <i class="fas fa-globe-americas" style="color:#22c55e;"></i>
+                    <span>Plagiarism Checker Results</span>
+                </div>
+                <div id="resultBox">
+                    <div class="results-placeholder">
+                        <div class="placeholder-icon">
+                            <i class="fas fa-magnifying-glass-chart"></i>
+                        </div>
+                        <h3>No Results Yet</h3>
+                        <p>Run a scan on the left to see your plagiarism analysis results here.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /checker-grid -->
+    </div><!-- /main-content -->
+</div><!-- /dashboardSection -->
+
+
+<script src="../js/script.js"></script>
+<script>
+    // Override switchMode for split-layout tabs
+    window.switchMode = function(mode) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${mode}`).classList.add('active');
+        document.querySelectorAll('.mode-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`mode-${mode}`).classList.remove('hidden');
+        if (window.resetApp) resetApp(false);
+    };
+</script>
+</body>
+</html>
