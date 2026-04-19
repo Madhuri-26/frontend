@@ -2,10 +2,10 @@
   "name": "plagguard-backend",
   "version": "1.0.0",
   "description": "Backend for PlagGuard Authentication System",
-  "main": "backend/server.js",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js"
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
